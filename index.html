@@ -2,8 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eu te amo — Para Debora</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Eu te amo — Para Débora</title>
 <style>
   html, body {
     margin: 0;
@@ -11,10 +11,12 @@
     overflow: hidden;
     height: 100%;
     background: radial-gradient(circle at center, #1a0a1d 0%, #050008 100%);
-    cursor: crosshair;
+    touch-action: none;
   }
   canvas {
     display: block;
+    width: 100%;
+    height: 100%;
   }
 </style>
 </head>
@@ -23,13 +25,15 @@
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-resize();
-window.addEventListener("resize", resize);
+let dpr = window.devicePixelRatio || 1;
 
 function resize(){
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
+window.addEventListener("resize", resize);
+resize();
 
 let hearts = [];
 let particles = [];
@@ -39,22 +43,22 @@ const color = "#ff5fa3";
 class Falling {
   constructor() { this.reset(); }
   reset() {
-    this.x = Math.random() * canvas.width;
-    this.y = Math.random() * -canvas.height;
-    this.size = 20 + Math.random() * 40;
-    this.speed = 0.5 + Math.random() * 1.5;
+    this.x = Math.random() * window.innerWidth;
+    this.y = Math.random() * -window.innerHeight;
+    this.size = 18 + Math.random() * 24;
+    this.speed = 0.4 + Math.random() * 0.8;
     this.opacity = 0.3 + Math.random() * 0.7;
   }
   update() {
     this.y += this.speed;
-    if(this.y > canvas.height + 50) this.reset();
+    if (this.y > window.innerHeight + 40) this.reset();
   }
   draw() {
     ctx.globalAlpha = this.opacity;
     ctx.font = `${this.size}px Arial`;
     ctx.fillStyle = color;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 10;
     ctx.fillText(text, this.x, this.y);
     ctx.shadowBlur = 0;
   }
@@ -64,45 +68,53 @@ class Particle {
   constructor(x, y) {
     this.x = x; this.y = y;
     const angle = Math.random() * Math.PI * 2;
-    const speed = 2 + Math.random() * 5;
+    const speed = 1 + Math.random() * 2;
     this.vx = Math.cos(angle) * speed;
     this.vy = Math.sin(angle) * speed;
-    this.size = 16 + Math.random() * 24;
-    this.life = 100 + Math.random() * 60;
+    this.size = 14 + Math.random() * 20;
+    this.life = 50 + Math.random() * 40;
     this.opacity = 1;
   }
   update() {
     this.x += this.vx;
     this.y += this.vy;
     this.life--;
-    this.opacity = Math.max(0, this.life / 100);
+    this.opacity = Math.max(0, this.life / 50);
   }
   draw() {
     ctx.globalAlpha = this.opacity;
     ctx.font = `${this.size}px Arial`;
     ctx.fillStyle = color;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 8;
     ctx.fillText(text, this.x, this.y);
     ctx.shadowBlur = 0;
   }
 }
 
-for(let i=0; i<100; i++) hearts.push(new Falling());
+// Menos textos caindo pra ficar leve
+for (let i = 0; i < 40; i++) hearts.push(new Falling());
 
-canvas.addEventListener("click", e=>{
-  for(let i=0;i<60;i++){
-    particles.push(new Particle(e.clientX, e.clientY));
+// Menos partículas ao toque
+function burst(x, y) {
+  for (let i = 0; i < 15; i++) {
+    particles.push(new Particle(x, y));
   }
+}
+
+canvas.addEventListener("click", e => burst(e.clientX, e.clientY));
+canvas.addEventListener("touchstart", e => {
+  const t = e.touches[0];
+  burst(t.clientX, t.clientY);
 });
 
-function animate(){
-  ctx.fillStyle = "rgba(0,0,0,0.2)";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  hearts.forEach(h=>{h.update();h.draw();});
-  particles.forEach((p,i)=>{
+function animate() {
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  hearts.forEach(h => { h.update(); h.draw(); });
+  particles.forEach((p, i) => {
     p.update(); p.draw();
-    if(p.life<=0) particles.splice(i,1);
+    if (p.life <= 0) particles.splice(i, 1);
   });
   requestAnimationFrame(animate);
 }
