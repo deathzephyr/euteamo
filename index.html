@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eu te amo — Para Debora</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    background: radial-gradient(circle at center, #1a0a1d 0%, #050008 100%);
+    cursor: crosshair;
+  }
+  canvas {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+resize();
+window.addEventListener("resize", resize);
+
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+let hearts = [];
+let particles = [];
+const text = "Eu te amo";
+const color = "#ff5fa3";
+
+class Falling {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * -canvas.height;
+    this.size = 20 + Math.random() * 40;
+    this.speed = 0.5 + Math.random() * 1.5;
+    this.opacity = 0.3 + Math.random() * 0.7;
+  }
+  update() {
+    this.y += this.speed;
+    if(this.y > canvas.height + 50) this.reset();
+  }
+  draw() {
+    ctx.globalAlpha = this.opacity;
+    ctx.font = `${this.size}px Arial`;
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 20;
+    ctx.fillText(text, this.x, this.y);
+    ctx.shadowBlur = 0;
+  }
+}
+
+class Particle {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 5;
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed;
+    this.size = 16 + Math.random() * 24;
+    this.life = 100 + Math.random() * 60;
+    this.opacity = 1;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life--;
+    this.opacity = Math.max(0, this.life / 100);
+  }
+  draw() {
+    ctx.globalAlpha = this.opacity;
+    ctx.font = `${this.size}px Arial`;
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+    ctx.fillText(text, this.x, this.y);
+    ctx.shadowBlur = 0;
+  }
+}
+
+for(let i=0; i<100; i++) hearts.push(new Falling());
+
+canvas.addEventListener("click", e=>{
+  for(let i=0;i<60;i++){
+    particles.push(new Particle(e.clientX, e.clientY));
+  }
+});
+
+function animate(){
+  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  hearts.forEach(h=>{h.update();h.draw();});
+  particles.forEach((p,i)=>{
+    p.update(); p.draw();
+    if(p.life<=0) particles.splice(i,1);
+  });
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>
